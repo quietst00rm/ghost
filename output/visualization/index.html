@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GHOST SWEEP - LinkedIn Engagement Pattern Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: #06060b;
+  color: #d0d0d8;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ========== HEADER ========== */
+#header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 56px;
+  background: rgba(6,6,11,0.95);
+  border-bottom: 1px solid #161622;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+#brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 200px;
+}
+#brand h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 16px;
+  color: #ef4444;
+  letter-spacing: 3px;
+  line-height: 1;
+}
+#brand .subtitle {
+  font-size: 10px;
+  color: #353540;
+  letter-spacing: 0.5px;
+}
+#header-stats {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+.header-stat {
+  text-align: center;
+}
+.header-stat .val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+.header-stat .lbl {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #353540;
+}
+#view-tabs {
+  display: flex;
+  gap: 8px;
+  min-width: 200px;
+  justify-content: flex-end;
+}
+.view-tab {
+  background: none;
+  border: none;
+  color: #606070;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+}
+.view-tab:hover { color: #d0d0d8; }
+.view-tab.active {
+  color: #d0d0d8;
+  border-bottom-color: #ef4444;
+}
+
+/* ========== MAIN CONTENT ========== */
+#main {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+.view {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.view.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ========== FILTER PANEL ========== */
+#filter-panel {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 220px;
+  background: rgba(12,12,20,0.95);
+  border: 1px solid #161622;
+  border-radius: 6px;
+  padding: 16px;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  font-size: 12px;
+}
+#filter-panel.collapsed {
+  transform: translateX(-240px);
+}
+#filter-toggle {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 32px;
+  height: 32px;
+  background: rgba(12,12,20,0.95);
+  border: 1px solid #161622;
+  border-radius: 6px;
+  color: #606070;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 49;
+  transition: opacity 0.2s;
+}
+#filter-toggle.hidden { opacity: 0; pointer-events: none; }
+.filter-section { margin-bottom: 14px; }
+.filter-section:last-child { margin-bottom: 0; }
+.filter-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #606070;
+  margin-bottom: 8px;
+}
+.tier-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  cursor: pointer;
+  color: #d0d0d8;
+}
+.tier-check input { display: none; }
+.tier-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transition: opacity 0.2s;
+}
+.tier-check input:not(:checked) ~ .tier-dot { opacity: 0.2; }
+.tier-check .tier-name { font-size: 12px; flex: 1; }
+.tier-check .tier-count { font-size: 10px; color: #606070; font-family: 'JetBrains Mono', monospace; }
+#search-input {
+  width: 100%;
+  background: #0c0c14;
+  border: 1px solid #161622;
+  border-radius: 6px;
+  color: #d0d0d8;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+#search-input:focus { border-color: #3b82f6; }
+#search-input::placeholder { color: #353540; }
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.slider-row input[type=range] {
+  flex: 1;
+  accent-color: #3b82f6;
+  height: 4px;
+}
+.slider-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #606070;
+  min-width: 28px;
+  text-align: right;
+}
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: #d0d0d8;
+  font-size: 12px;
+}
+.toggle-row input { display: none; }
+.toggle-switch {
+  width: 28px;
+  height: 16px;
+  background: #161622;
+  border-radius: 8px;
+  position: relative;
+  transition: background 0.2s;
+}
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  background: #606070;
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+.toggle-row input:checked ~ .toggle-switch { background: #3b82f6; }
+.toggle-row input:checked ~ .toggle-switch::after {
+  transform: translateX(12px);
+  background: #fff;
+}
+#reset-filters {
+  width: 100%;
+  background: none;
+  border: 1px solid #161622;
+  border-radius: 6px;
+  color: #606070;
+  padding: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+#reset-filters:hover { color: #d0d0d8; border-color: #606070; }
+
+/* ========== DETAIL PANEL ========== */
+#detail-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 380px;
+  height: 100%;
+  background: rgba(12,12,20,0.97);
+  border-left: 1px solid #161622;
+  z-index: 60;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  backdrop-filter: blur(12px);
+}
+#detail-panel.open { transform: translateX(0); }
+#detail-panel .close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: 1px solid #161622;
+  border-radius: 6px;
+  color: #606070;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#detail-panel .close-btn:hover { color: #d0d0d8; }
+.detail-content { padding: 20px; }
+.detail-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.detail-tier {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.detail-link {
+  display: block;
+  font-size: 11px;
+  color: #3b82f6;
+  text-decoration: none;
+  margin-bottom: 16px;
+  word-break: break-all;
+}
+.detail-link:hover { text-decoration: underline; }
+.detail-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.detail-stat {
+  background: #0c0c14;
+  border: 1px solid #161622;
+  border-radius: 6px;
+  padding: 8px;
+  text-align: center;
+}
+.detail-stat .ds-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+.detail-stat .ds-lbl {
+  font-size: 9px;
+  color: #606070;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.auto-flag {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 16px;
+  font-size: 11px;
+}
+.auto-flag .flag-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #ef4444;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.auto-flag .flag-signals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.signal-pill {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(239,68,68,0.15);
+  color: #ef4444;
+}
+.connections-section { margin-bottom: 12px; }
+.connections-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #606070;
+  margin-bottom: 8px;
+}
+.connection-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 12px;
+}
+.connection-item:hover { background: rgba(255,255,255,0.03); }
+.connection-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.badge-incoming { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.badge-outgoing { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+/* ========== TOOLTIP ========== */
+#tooltip {
+  position: fixed;
+  background: rgba(12,12,20,0.97);
+  border: 1px solid #161622;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 200;
+  max-width: 280px;
+  backdrop-filter: blur(8px);
+}
+#tooltip.visible { opacity: 1; }
+#tooltip .tt-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+#tooltip .tt-tier {
+  font-size: 10px;
+  margin-bottom: 6px;
+}
+#tooltip .tt-stats {
+  font-size: 11px;
+  color: #606070;
+  line-height: 1.6;
+}
+
+/* ========== SVG ========== */
+svg { display: block; }
+svg text {
+  font-family: 'DM Sans', sans-serif;
+  fill: #d0d0d8;
+}
+
+/* ========== RING VIEW ========== */
+#ring-stats {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(12,12,20,0.9);
+  border: 1px solid #161622;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.ring-seg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ring-seg .seg-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.ring-seg .seg-arrow {
+  color: #353540;
+  margin: 0 8px;
+}
+
+/* ========== BURST VIEW ========== */
+#burst-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 300px;
+  max-height: calc(100% - 24px);
+  background: rgba(12,12,20,0.95);
+  border: 1px solid #161622;
+  border-radius: 6px;
+  overflow-y: auto;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+.burst-panel-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #606070;
+  padding: 12px 16px 8px;
+}
+.burst-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid #0c0c14;
+  font-size: 12px;
+}
+.burst-item:hover { background: rgba(255,255,255,0.02); }
+.burst-item .bi-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: #ef4444;
+}
+.burst-item .bi-detail { color: #606070; font-size: 11px; }
+#burst-summary {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(12,12,20,0.9);
+  border: 1px solid #161622;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-size: 12px;
+  text-align: center;
+  max-width: 600px;
+}
+#burst-filter {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(12,12,20,0.9);
+  border: 1px solid #161622;
+  border-radius: 6px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  z-index: 50;
+}
+
+/* ========== AUTOMATED VIEW ========== */
+#auto-view {
+  overflow-y: auto;
+  padding: 24px;
+}
+#auto-summary {
+  text-align: center;
+  font-size: 13px;
+  color: #606070;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(12,12,20,0.7);
+  border: 1px solid #161622;
+  border-radius: 6px;
+}
+.auto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.auto-card {
+  background: #0c0c14;
+  border: 1px solid #161622;
+  border-radius: 6px;
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+.auto-card:hover { border-color: #353540; }
+.auto-card.featured {
+  grid-column: 1 / -1;
+  border-color: #ef4444;
+  background: rgba(239,68,68,0.03);
+}
+.ac-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.ac-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 15px;
+}
+.ac-score { display: flex; gap: 3px; }
+.score-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #161622;
+}
+.score-dot.filled { background: #ef4444; }
+.ac-link {
+  font-size: 11px;
+  color: #3b82f6;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 10px;
+}
+.ac-link:hover { text-decoration: underline; }
+.ac-metrics {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+  font-size: 11px;
+}
+.ac-metric .am-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+}
+.ac-metric .am-lbl { color: #606070; }
+.ac-signals { display: flex; flex-wrap: wrap; gap: 4px; }
+.ac-signal {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+.sig-volume { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.sig-generic { background: rgba(168,85,247,0.15); color: #a855f7; }
+.sig-rapid { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.sig-burst { background: rgba(239,68,68,0.15); color: #ef4444; }
+.sig-cross { background: rgba(16,185,129,0.15); color: #10b981; }
+.featured-targets {
+  margin-top: 12px;
+  position: relative;
+  height: 200px;
+}
+
+/* ========== EVIDENCE VIEW ========== */
+#evidence-view {
+  overflow-y: auto;
+  padding: 40px 24px;
+}
+.evidence-content {
+  max-width: 760px;
+  margin: 0 auto;
+}
+.ev-section { margin-bottom: 48px; }
+.ev-section h2 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #fff;
+}
+.ev-section p {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #a0a0aa;
+  margin-bottom: 12px;
+}
+.ev-inline-stats {
+  display: flex;
+  gap: 24px;
+  margin: 20px 0;
+  padding: 16px;
+  background: #0c0c14;
+  border: 1px solid #161622;
+  border-radius: 6px;
+}
+.ev-inline-stat {
+  text-align: center;
+}
+.ev-inline-stat .eis-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+}
+.ev-inline-stat .eis-lbl {
+  font-size: 10px;
+  color: #606070;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.ev-chart {
+  width: 100%;
+  height: 120px;
+  margin: 16px 0;
+  background: #0c0c14;
+  border: 1px solid #161622;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.ev-methodology {
+  background: rgba(59,130,246,0.05);
+  border: 1px solid rgba(59,130,246,0.15);
+  border-radius: 6px;
+  padding: 20px;
+}
+.ev-methodology ul {
+  list-style: none;
+  padding: 0;
+}
+.ev-methodology li {
+  font-size: 13px;
+  color: #a0a0aa;
+  padding: 4px 0;
+  padding-left: 16px;
+  position: relative;
+}
+.ev-methodology li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+}
+.ev-footer {
+  text-align: center;
+  font-size: 12px;
+  color: #353540;
+  padding: 40px 0;
+  border-top: 1px solid #161622;
+  margin-top: 40px;
+  font-style: italic;
+}
+
+/* ========== LOADING ========== */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: #06060b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.5s ease;
+}
+#loading.hidden { opacity: 0; pointer-events: none; }
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #161622;
+  border-top-color: #ef4444;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #606070;
+  margin-top: 16px;
+  letter-spacing: 2px;
+}
+
+/* ========== BELOW 1024 MESSAGE ========== */
+#mobile-msg {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #06060b;
+  z-index: 2000;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+}
+#mobile-msg h2 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  color: #ef4444;
+  margin-bottom: 12px;
+}
+#mobile-msg p { font-size: 13px; color: #606070; }
+#mobile-msg .continue-btn {
+  margin-top: 20px;
+  background: none;
+  border: 1px solid #161622;
+  border-radius: 6px;
+  color: #606070;
+  padding: 8px 20px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1279px) {
+  .header-stat .val { font-size: 16px; }
+  .header-stat .lbl { font-size: 8px; }
+  #detail-panel { width: 320px; }
+  #header-stats { gap: 20px; }
+}
+@media (max-width: 1023px) {
+  #mobile-msg { display: flex; }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #161622; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #353540; }
+</style>
+</head>
+<body>
+
+<!-- Loading State -->
+<div id="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">ANALYZING PATTERNS</div>
+</div>
+
+<!-- Mobile Message -->
+<div id="mobile-msg">
+  <h2>GHOST SWEEP</h2>
+  <p>This investigation platform is best viewed on desktop (1024px+ width).</p>
+  <button class="continue-btn" onclick="this.parentElement.style.display='none'">Continue anyway</button>
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip">
+  <div class="tt-name"></div>
+  <div class="tt-tier"></div>
+  <div class="tt-stats"></div>
+</div>
+
+<!-- Header -->
+<div id="header">
+  <div id="brand">
+    <h1>GHOST SWEEP</h1>
+    <div class="subtitle">LinkedIn Engagement Pattern Analysis</div>
+  </div>
+  <div id="header-stats">
+    <div class="header-stat"><div class="val" data-counter="total_accounts">0</div><div class="lbl">Accounts</div></div>
+    <div class="header-stat"><div class="val" data-counter="total_edges">0</div><div class="lbl">Connections</div></div>
+    <div class="header-stat"><div class="val" data-counter="total_burst_events">0</div><div class="lbl">Coordinated Events</div></div>
+    <div class="header-stat"><div class="val" data-counter="automated_accounts_count">0</div><div class="lbl">Automated Flags</div></div>
+  </div>
+  <div id="view-tabs">
+    <button class="view-tab active" data-view="network">Network</button>
+    <button class="view-tab" data-view="ring">Ring</button>
+    <button class="view-tab" data-view="burst">Timeline</button>
+    <button class="view-tab" data-view="auto">Automated</button>
+    <button class="view-tab" data-view="evidence">Evidence</button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div id="main">
+  <!-- View 1: Network Map -->
+  <div class="view active" id="view-network">
+    <svg id="network-svg"></svg>
+  </div>
+
+  <!-- View 2: Ring Structure -->
+  <div class="view" id="view-ring">
+    <svg id="ring-svg"></svg>
+    <div id="ring-stats"></div>
+  </div>
+
+  <!-- View 3: Burst Timeline -->
+  <div class="view" id="view-burst">
+    <svg id="burst-svg"></svg>
+    <div id="burst-panel"></div>
+    <div id="burst-filter">
+      <span style="color:#606070">Min commenters:</span>
+      <input type="range" id="burst-min-slider" min="3" max="24" value="5" style="width:120px;accent-color:#ef4444">
+      <span id="burst-min-val" class="slider-val" style="color:#d0d0d8">5</span>
+    </div>
+    <div id="burst-summary"></div>
+  </div>
+
+  <!-- View 4: Automated Accounts -->
+  <div class="view" id="view-auto">
+    <div id="auto-view">
+      <div id="auto-summary"></div>
+      <div class="auto-grid" id="auto-grid"></div>
+    </div>
+  </div>
+
+  <!-- View 5: Evidence -->
+  <div class="view" id="view-evidence">
+    <div id="evidence-view"></div>
+  </div>
+
+  <!-- Filter Panel (network + ring views) -->
+  <div id="filter-panel">
+    <div class="filter-section">
+      <div class="filter-label">Tiers</div>
+      <div id="tier-filters"></div>
+    </div>
+    <div class="filter-section">
+      <div class="filter-label">Cluster</div>
+      <select id="cluster-select" style="width:100%;background:#0c0c14;border:1px solid #161622;border-radius:6px;color:#d0d0d8;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none">
+        <option value="all">All clusters</option>
+      </select>
+    </div>
+    <div class="filter-section">
+      <div class="filter-label">Search</div>
+      <input type="text" id="search-input" placeholder="Search by name...">
+    </div>
+    <div class="filter-section">
+      <div class="filter-label">Min Comments</div>
+      <div class="slider-row">
+        <input type="range" id="min-comments" min="0" max="800" value="0" step="10">
+        <span class="slider-val" id="min-comments-val">0</span>
+      </div>
+    </div>
+    <div class="filter-section">
+      <label class="toggle-row">
+        <input type="checkbox" id="reciprocal-only">
+        <div class="toggle-switch"></div>
+        Reciprocal only
+      </label>
+    </div>
+    <button id="reset-filters">Reset filters</button>
+  </div>
+  <button id="filter-toggle" class="hidden" title="Show filters">F</button>
+
+  <!-- Detail Panel -->
+  <div id="detail-panel">
+    <button class="close-btn" id="detail-close">&times;</button>
+    <div class="detail-content" id="detail-content"></div>
+  </div>
+</div>
+
+<script>
+// ========== GLOBALS ==========
+let DATA = null;
+let currentView = 'network';
+let selectedNode = null;
+let networkSim = null;
+let tooltipTimer = null;
+
+const TIER_COLORS = {
+  1: '#ef4444',
+  2: '#f59e0b',
+  3: '#3b82f6',
+  4: '#a855f7',
+  5: '#6b7280'
+};
+const TIER_LABELS = {
+  1: 'Network Operator',
+  2: 'Core Participant',
+  3: 'Proven Participant',
+  4: 'Strong Pattern Match',
+  5: 'Suspected Participant'
+};
+
+// ========== LOAD DATA ==========
+async function init() {
+  try {
+    const resp = await fetch('data.json');
+    DATA = await resp.json();
+    buildIndexes();
+    setupUI();
+    animateCounters();
+    renderNetworkMap();
+    document.getElementById('loading').classList.add('hidden');
+  } catch (e) {
+    console.error('Failed to load data:', e);
+    document.querySelector('.loading-text').textContent = 'FAILED TO LOAD DATA';
+  }
+}
+
+// ========== INDEXES ==========
+let nodeMap = {};
+let edgesByNode = {};
+let incomingByNode = {};
+let outgoingByNode = {};
+
+function buildIndexes() {
+  DATA.nodes.forEach(n => { nodeMap[n.id] = n; });
+  DATA.edges.forEach(e => {
+    if (!edgesByNode[e.source]) edgesByNode[e.source] = [];
+    if (!edgesByNode[e.target]) edgesByNode[e.target] = [];
+    edgesByNode[e.source].push(e);
+    edgesByNode[e.target].push(e);
+    // outgoing: source comments on target's posts
+    if (!outgoingByNode[e.source]) outgoingByNode[e.source] = [];
+    outgoingByNode[e.source].push(e);
+    // incoming: source comments on target, so target receives
+    if (!incomingByNode[e.target]) incomingByNode[e.target] = [];
+    incomingByNode[e.target].push(e);
+  });
+}
+
+// ========== UI SETUP ==========
+function setupUI() {
+  // View tabs
+  document.querySelectorAll('.view-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchView(tab.dataset.view));
+  });
+
+  // Keyboard navigation
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    const views = ['network', 'ring', 'burst', 'auto', 'evidence'];
+    if (e.key >= '1' && e.key <= '5') {
+      switchView(views[parseInt(e.key) - 1]);
+    }
+    if (e.key === 'Escape') {
+      deselectNode();
+    }
+  });
+
+  // Filter panel
+  setupFilters();
+
+  // Detail panel close
+  document.getElementById('detail-close').addEventListener('click', deselectNode);
+}
+
+function switchView(view) {
+  if (view === currentView) return;
+  deselectNode();
+
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+
+  const fp = document.getElementById('filter-panel');
+  const ft = document.getElementById('filter-toggle');
+  if (view === 'network' || view === 'ring') {
+    fp.classList.remove('collapsed');
+    ft.classList.add('hidden');
+  } else {
+    fp.classList.add('collapsed');
+    ft.classList.add('hidden');
+  }
+
+  const prev = currentView;
+  currentView = view;
+
+  if (view === 'network' && !networkSim) renderNetworkMap();
+  if (view === 'ring') renderRingStructure();
+  if (view === 'burst') renderBurstTimeline();
+  if (view === 'auto') renderAutomatedView();
+  if (view === 'evidence') renderEvidenceView();
+}
+
+// ========== COUNTER ANIMATION ==========
+function animateCounters() {
+  const targets = {
+    total_accounts: DATA.stats.total_accounts,
+    total_edges: DATA.edges.length,
+    total_burst_events: DATA.stats.total_burst_events,
+    automated_accounts_count: DATA.stats.automated_accounts_count
+  };
+  document.querySelectorAll('[data-counter]').forEach(el => {
+    const key = el.dataset.counter;
+    const target = targets[key] || 0;
+    animateNumber(el, 0, target, 1200);
+  });
+}
+
+function animateNumber(el, from, to, duration) {
+  const start = performance.now();
+  function tick(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (to - from) * ease).toLocaleString();
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ========== FILTERS ==========
+let filters = { tiers: new Set([1,2,3,4,5]), cluster: 'all', search: '', minComments: 0, reciprocalOnly: false };
+
+function setupFilters() {
+  const tierDiv = document.getElementById('tier-filters');
+  const tierCounts = DATA.stats.tier_breakdown;
+  [1,2,3,4,5].forEach(t => {
+    const label = document.createElement('label');
+    label.className = 'tier-check';
+    label.innerHTML = `<input type="checkbox" checked data-tier="${t}"><span class="tier-dot" style="background:${TIER_COLORS[t]}"></span><span class="tier-name">${TIER_LABELS[t]}</span><span class="tier-count">${tierCounts[t]||0}</span>`;
+    label.querySelector('input').addEventListener('change', e => {
+      if (e.target.checked) filters.tiers.add(t); else filters.tiers.delete(t);
+      applyFilters();
+    });
+    tierDiv.appendChild(label);
+  });
+
+  // Cluster select
+  const sel = document.getElementById('cluster-select');
+  DATA.clusters.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = `Cluster ${c.id} (${c.member_count} members)`;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => { filters.cluster = sel.value; applyFilters(); });
+
+  // Search
+  document.getElementById('search-input').addEventListener('input', e => {
+    filters.search = e.target.value.toLowerCase();
+    applyFilters();
+  });
+
+  // Min comments
+  const slider = document.getElementById('min-comments');
+  const sliderVal = document.getElementById('min-comments-val');
+  slider.addEventListener('input', () => {
+    filters.minComments = parseInt(slider.value);
+    sliderVal.textContent = slider.value;
+    applyFilters();
+  });
+
+  // Reciprocal only
+  document.getElementById('reciprocal-only').addEventListener('change', e => {
+    filters.reciprocalOnly = e.target.checked;
+    applyFilters();
+  });
+
+  // Reset
+  document.getElementById('reset-filters').addEventListener('click', () => {
+    filters = { tiers: new Set([1,2,3,4,5]), cluster: 'all', search: '', minComments: 0, reciprocalOnly: false };
+    document.querySelectorAll('#tier-filters input').forEach(i => i.checked = true);
+    document.getElementById('cluster-select').value = 'all';
+    document.getElementById('search-input').value = '';
+    document.getElementById('min-comments').value = 0;
+    document.getElementById('min-comments-val').textContent = '0';
+    document.getElementById('reciprocal-only').checked = false;
+    applyFilters();
+  });
+}
+
+function passesFilter(node) {
+  if (!filters.tiers.has(node.tier)) return false;
+  if (filters.cluster !== 'all' && node.cluster_id !== parseInt(filters.cluster)) return false;
+  if (filters.search && !node.name.toLowerCase().includes(filters.search)) return false;
+  if (filters.minComments > 0 && node.metrics.total_comments < filters.minComments) return false;
+  return true;
+}
+
+function applyFilters() {
+  if (currentView === 'network') updateNetworkVisibility();
+  if (currentView === 'ring') renderRingStructure();
+}
+
+// ========== TOOLTIP ==========
+function showTooltip(node, x, y) {
+  clearTimeout(tooltipTimer);
+  tooltipTimer = setTimeout(() => {
+    const tt = document.getElementById('tooltip');
+    tt.querySelector('.tt-name').textContent = node.name;
+    tt.querySelector('.tt-tier').innerHTML = `<span style="color:${TIER_COLORS[node.tier]}">${node.tier_label}</span>`;
+    tt.querySelector('.tt-stats').innerHTML =
+      `Comments: ${node.metrics.total_comments}<br>Authors: ${node.metrics.unique_authors}<br>Burst events: ${node.metrics.burst_appearances}`;
+    tt.style.left = (x + 16) + 'px';
+    tt.style.top = (y - 10) + 'px';
+    // Keep tooltip in viewport
+    const rect = tt.getBoundingClientRect();
+    if (rect.right > window.innerWidth) tt.style.left = (x - rect.width - 10) + 'px';
+    if (rect.bottom > window.innerHeight) tt.style.top = (y - rect.height - 10) + 'px';
+    tt.classList.add('visible');
+  }, 200);
+}
+
+function hideTooltip() {
+  clearTimeout(tooltipTimer);
+  document.getElementById('tooltip').classList.remove('visible');
+}
+
+// ========== DETAIL PANEL ==========
+function selectNode(nodeId) {
+  const node = nodeMap[nodeId];
+  if (!node) return;
+  selectedNode = nodeId;
+
+  const panel = document.getElementById('detail-panel');
+  const content = document.getElementById('detail-content');
+
+  const incoming = (incomingByNode[nodeId] || []).sort((a,b) => b.weight - a.weight);
+  const outgoing = (outgoingByNode[nodeId] || []).sort((a,b) => b.weight - a.weight);
+
+  const autoAcct = DATA.automated_accounts.find(a => a.slug === nodeId);
+
+  let html = `
+    <div class="detail-name" style="color:${TIER_COLORS[node.tier]}">${node.name}</div>
+    <span class="detail-tier" style="background:${TIER_COLORS[node.tier]}22;color:${TIER_COLORS[node.tier]}">${node.tier_label}</span>
+    <a class="detail-link" href="${node.linkedin_url}" target="_blank" rel="noopener">${node.linkedin_url}</a>
+    <div class="detail-stats">
+      <div class="detail-stat"><div class="ds-val">${node.metrics.total_comments.toLocaleString()}</div><div class="ds-lbl">Comments</div></div>
+      <div class="detail-stat"><div class="ds-val">${node.metrics.unique_authors}</div><div class="ds-lbl">Authors</div></div>
+      <div class="detail-stat"><div class="ds-val">${node.metrics.reciprocal_pairs}</div><div class="ds-lbl">Reciprocal</div></div>
+      <div class="detail-stat"><div class="ds-val">${node.metrics.burst_appearances}</div><div class="ds-lbl">Bursts</div></div>
+      <div class="detail-stat"><div class="ds-val">${node.metrics.avg_response_minutes ? Math.round(node.metrics.avg_response_minutes) + 'm' : '-'}</div><div class="ds-lbl">Avg Response</div></div>
+      <div class="detail-stat"><div class="ds-val">${node.metrics.pct_generic_comments ? node.metrics.pct_generic_comments + '%' : '-'}</div><div class="ds-lbl">Generic %</div></div>
+    </div>`;
+
+  if (autoAcct) {
+    html += `<div class="auto-flag"><div class="flag-title">AUTOMATED PATTERN DETECTED</div><div class="flag-signals">`;
+    (autoAcct.signals || []).forEach(s => {
+      html += `<span class="signal-pill">${s}</span>`;
+    });
+    html += `</div></div>`;
+  }
+
+  if (incoming.length > 0) {
+    html += `<div class="connections-section"><div class="connections-title">Comments on their posts (${incoming.length})</div>`;
+    incoming.slice(0, 30).forEach(e => {
+      html += `<div class="connection-item" data-node="${e.source}" onclick="selectNode('${e.source}');highlightNetworkNode('${e.source}')">
+        <span>${e.source_name}</span><span class="connection-badge badge-incoming">${e.weight}</span></div>`;
+    });
+    if (incoming.length > 30) html += `<div style="font-size:11px;color:#353540;padding:4px 8px">+${incoming.length - 30} more</div>`;
+    html += `</div>`;
+  }
+
+  if (outgoing.length > 0) {
+    html += `<div class="connections-section"><div class="connections-title">They comment on (${outgoing.length})</div>`;
+    outgoing.slice(0, 30).forEach(e => {
+      html += `<div class="connection-item" data-node="${e.target}" onclick="selectNode('${e.target}');highlightNetworkNode('${e.target}')">
+        <span>${e.target_name}</span><span class="connection-badge badge-outgoing">${e.weight}</span></div>`;
+    });
+    if (outgoing.length > 30) html += `<div style="font-size:11px;color:#353540;padding:4px 8px">+${outgoing.length - 30} more</div>`;
+    html += `</div>`;
+  }
+
+  content.innerHTML = html;
+  panel.classList.add('open');
+
+  if (currentView === 'network') highlightNetworkNode(nodeId);
+  if (currentView === 'ring') highlightRingNode(nodeId);
+}
+
+function deselectNode() {
+  selectedNode = null;
+  document.getElementById('detail-panel').classList.remove('open');
+  if (currentView === 'network') resetNetworkHighlight();
+  if (currentView === 'ring') resetRingHighlight();
+  hideTooltip();
+}
+
+// ========== VIEW 1: NETWORK MAP ==========
+let networkNodes, networkEdges, networkNodeEls, networkEdgeEls, networkLabels, networkG, networkZoom;
+const nodeScale = d3.scaleSqrt().range([3, 24]);
+
+function renderNetworkMap() {
+  const container = document.getElementById('view-network');
+  const svg = d3.select('#network-svg');
+  svg.selectAll('*').remove();
+
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  svg.attr('width', w).attr('height', h);
+
+  nodeScale.domain([0, d3.max(DATA.nodes, d => d.metrics.total_comments) || 1]);
+
+  const g = svg.append('g');
+  networkG = g;
+
+  // Edges (hidden by default)
+  const edgeG = g.append('g').attr('class', 'edges');
+  networkEdgeEls = edgeG.selectAll('line')
+    .data(DATA.edges)
+    .join('line')
+    .attr('stroke', '#606070')
+    .attr('stroke-width', d => Math.max(0.5, Math.min(4, d.weight / 8)))
+    .attr('opacity', 0);
+
+  // Nodes
+  const nodeG = g.append('g').attr('class', 'nodes');
+  networkNodeEls = nodeG.selectAll('circle')
+    .data(DATA.nodes, d => d.id)
+    .join('circle')
+    .attr('r', d => nodeScale(d.metrics.total_comments))
+    .attr('fill', d => TIER_COLORS[d.tier])
+    .attr('opacity', d => d.tier <= 3 ? 1 : d.tier === 4 ? 0.7 : 0.4)
+    .attr('cursor', 'pointer')
+    .on('mouseenter', function(event, d) {
+      if (!selectedNode) hoverNetworkNode(d.id, event);
+      showTooltip(d, event.clientX, event.clientY);
+    })
+    .on('mouseleave', function() {
+      if (!selectedNode) resetNetworkHighlight();
+      hideTooltip();
+    })
+    .on('click', function(event, d) {
+      event.stopPropagation();
+      selectNode(d.id);
+    });
+
+  // Labels
+  const labelG = g.append('g').attr('class', 'labels');
+  networkLabels = labelG.selectAll('text')
+    .data(DATA.nodes, d => d.id)
+    .join('text')
+    .text(d => d.name)
+    .attr('font-size', 9)
+    .attr('text-anchor', 'middle')
+    .attr('dy', d => nodeScale(d.metrics.total_comments) + 12)
+    .attr('fill', '#606070')
+    .attr('opacity', d => d.metrics.total_comments > 300 ? 0.8 : 0)
+    .attr('pointer-events', 'none');
+
+  // Background click to deselect
+  svg.on('click', () => deselectNode());
+
+  // Force simulation
+  const nodeData = DATA.nodes.map(d => ({...d}));
+  const edgeData = DATA.edges.map(d => ({...d}));
+
+  networkSim = d3.forceSimulation(nodeData)
+    .force('charge', d3.forceManyBody().strength(-30))
+    .force('center', d3.forceCenter(w / 2, h / 2))
+    .force('collision', d3.forceCollide(d => nodeScale(d.metrics.total_comments) + 2))
+    .force('link', d3.forceLink(edgeData).id(d => d.id).distance(80).strength(0.1))
+    .force('x', d3.forceX(w / 2).strength(0.03))
+    .force('y', d3.forceY(h / 2).strength(0.03))
+    .alpha(1)
+    .alphaDecay(0.02)
+    .on('tick', () => {
+      networkNodeEls.data(nodeData, d => d.id)
+        .attr('cx', d => d.x)
+        .attr('cy', d => d.y);
+      networkEdgeEls.data(edgeData)
+        .attr('x1', d => d.source.x)
+        .attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x)
+        .attr('y2', d => d.target.y);
+      networkLabels.data(nodeData, d => d.id)
+        .attr('x', d => d.x)
+        .attr('y', d => d.y);
+    });
+
+  // Store references for edge highlighting
+  networkNodes = nodeData;
+  networkEdges = edgeData;
+
+  // Zoom
+  networkZoom = d3.zoom()
+    .scaleExtent([0.3, 8])
+    .on('zoom', (event) => {
+      g.attr('transform', event.transform);
+      // Progressive label reveal on zoom
+      const k = event.transform.k;
+      const threshold = 300 / Math.pow(k, 1.5);
+      networkLabels.attr('opacity', d => d.metrics.total_comments > threshold ? 0.8 : 0);
+    });
+  svg.call(networkZoom);
+
+  // Drag
+  networkNodeEls.call(d3.drag()
+    .on('start', (event, d) => {
+      if (!event.active) networkSim.alphaTarget(0.1).restart();
+      d.fx = d.x; d.fy = d.y;
+    })
+    .on('drag', (event, d) => { d.fx = event.x; d.fy = event.y; })
+    .on('end', (event, d) => {
+      if (!event.active) networkSim.alphaTarget(0);
+      d.fx = null; d.fy = null;
+    })
+  );
+}
+
+function hoverNetworkNode(nodeId) {
+  const connected = new Set();
+  networkEdgeEls.each(function(d) {
+    const src = typeof d.source === 'object' ? d.source.id : d.source;
+    const tgt = typeof d.target === 'object' ? d.target.id : d.target;
+    if (src === nodeId || tgt === nodeId) {
+      connected.add(src);
+      connected.add(tgt);
+    }
+  });
+
+  networkNodeEls.transition().duration(200)
+    .attr('opacity', d => connected.has(d.id) || d.id === nodeId ? 1 : 0.05);
+  networkEdgeEls.transition().duration(300)
+    .attr('opacity', d => {
+      const src = typeof d.source === 'object' ? d.source.id : d.source;
+      const tgt = typeof d.target === 'object' ? d.target.id : d.target;
+      return (src === nodeId || tgt === nodeId) ? 0.3 : 0;
+    });
+  networkLabels.transition().duration(200)
+    .attr('opacity', d => connected.has(d.id) || d.id === nodeId ? 0.9 : 0);
+}
+
+function highlightNetworkNode(nodeId) {
+  if (currentView !== 'network') return;
+  const connected = new Set();
+
+  networkEdgeEls.each(function(d) {
+    const src = typeof d.source === 'object' ? d.source.id : d.source;
+    const tgt = typeof d.target === 'object' ? d.target.id : d.target;
+    if (src === nodeId || tgt === nodeId) {
+      connected.add(src);
+      connected.add(tgt);
+    }
+  });
+
+  networkNodeEls.transition().duration(300)
+    .attr('opacity', d => connected.has(d.id) || d.id === nodeId ? 1 : 0.03);
+  networkEdgeEls.transition().duration(400)
+    .attr('opacity', d => {
+      const src = typeof d.source === 'object' ? d.source.id : d.source;
+      const tgt = typeof d.target === 'object' ? d.target.id : d.target;
+      if (src === nodeId || tgt === nodeId) return 0.8;
+      return 0;
+    })
+    .attr('stroke', d => {
+      const src = typeof d.source === 'object' ? d.source.id : d.source;
+      if (src === nodeId) return '#ef4444'; // outgoing red
+      return '#3b82f6'; // incoming blue
+    });
+  networkLabels.transition().duration(200)
+    .attr('opacity', d => connected.has(d.id) || d.id === nodeId ? 0.9 : 0);
+}
+
+function resetNetworkHighlight() {
+  networkNodeEls.transition().duration(300)
+    .attr('opacity', d => {
+      if (!passesFilter(d)) return 0.02;
+      return d.tier <= 3 ? 1 : d.tier === 4 ? 0.7 : 0.4;
+    });
+  networkEdgeEls.transition().duration(200)
+    .attr('opacity', 0)
+    .attr('stroke', '#606070');
+  networkLabels.transition().duration(200)
+    .attr('opacity', d => d.metrics.total_comments > 300 ? 0.8 : 0);
+}
+
+function updateNetworkVisibility() {
+  networkNodeEls.transition().duration(300)
+    .attr('opacity', d => {
+      if (!passesFilter(d)) return 0.02;
+      return d.tier <= 3 ? 1 : d.tier === 4 ? 0.7 : 0.4;
+    });
+  // Highlight search matches
+  if (filters.search) {
+    networkNodeEls.filter(d => d.name.toLowerCase().includes(filters.search))
+      .transition().duration(300)
+      .attr('opacity', 1)
+      .attr('r', d => nodeScale(d.metrics.total_comments) * 1.3);
+    networkNodeEls.filter(d => !d.name.toLowerCase().includes(filters.search))
+      .transition().duration(300)
+      .attr('r', d => nodeScale(d.metrics.total_comments));
+  } else {
+    networkNodeEls.transition().duration(300)
+      .attr('r', d => nodeScale(d.metrics.total_comments));
+  }
+}
+
+// ========== VIEW 2: RING STRUCTURE ==========
+let ringNodeEls, ringEdgeEls, ringLabels;
+
+function renderRingStructure() {
+  const container = document.getElementById('view-ring');
+  const svg = d3.select('#ring-svg');
+  svg.selectAll('*').remove();
+
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  svg.attr('width', w).attr('height', h);
+
+  const cx = w / 2;
+  const cy = h / 2;
+  const maxR = Math.min(w, h) * 0.42;
+
+  const g = svg.append('g');
+
+  // Group nodes by tier
+  const tiers = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+  DATA.nodes.forEach(n => {
+    if (passesFilter(n)) tiers[n.tier].push(n);
+  });
+
+  const ringRadii = { 1: 0, 2: maxR * 0.22, 3: maxR * 0.48, 4: maxR * 0.72, 5: maxR * 0.95 };
+
+  // Draw ring circles
+  [2, 3, 4, 5].forEach(t => {
+    g.append('circle')
+      .attr('cx', cx).attr('cy', cy)
+      .attr('r', ringRadii[t])
+      .attr('fill', 'none')
+      .attr('stroke', '#161622')
+      .attr('stroke-width', 1);
+  });
+
+  // Ring labels
+  [2, 3, 4, 5].forEach(t => {
+    g.append('text')
+      .attr('x', cx)
+      .attr('y', cy - ringRadii[t] - 8)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', 9)
+      .attr('fill', '#353540')
+      .attr('font-family', 'JetBrains Mono, monospace')
+      .text(`TIER ${t}`);
+  });
+
+  // Center label
+  g.append('text')
+    .attr('x', cx).attr('y', cy - 20)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', 9)
+    .attr('fill', '#353540')
+    .attr('font-family', 'JetBrains Mono, monospace')
+    .text('OPERATORS');
+
+  // Position nodes on rings
+  const positioned = [];
+  Object.keys(tiers).forEach(t => {
+    const tier = parseInt(t);
+    const nodes = tiers[tier];
+    const r = ringRadii[tier];
+    nodes.forEach((n, i) => {
+      const angle = (2 * Math.PI * i / Math.max(nodes.length, 1)) - Math.PI / 2;
+      n._rx = cx + r * Math.cos(angle);
+      n._ry = cy + r * Math.sin(angle);
+      positioned.push(n);
+    });
+  });
+
+  // Position map for edges
+  const posMap = {};
+  positioned.forEach(n => { posMap[n.id] = { x: n._rx, y: n._ry }; });
+
+  // Draw reciprocal edges (faint)
+  ringEdgeEls = g.append('g').selectAll('line')
+    .data(DATA.reciprocal_pairs.filter(p => posMap[p.a] && posMap[p.b]))
+    .join('line')
+    .attr('x1', d => posMap[d.a].x).attr('y1', d => posMap[d.a].y)
+    .attr('x2', d => posMap[d.b].x).attr('y2', d => posMap[d.b].y)
+    .attr('stroke', '#606070')
+    .attr('stroke-width', 0.5)
+    .attr('opacity', 0.05)
+    .attr('data-a', d => d.a)
+    .attr('data-b', d => d.b);
+
+  // Draw nodes with entrance animation
+  ringNodeEls = g.append('g').selectAll('circle')
+    .data(positioned, d => d.id)
+    .join('circle')
+    .attr('cx', cx).attr('cy', cy)
+    .attr('r', d => nodeScale(d.metrics.total_comments) * 0.8)
+    .attr('fill', d => TIER_COLORS[d.tier])
+    .attr('opacity', 0)
+    .attr('cursor', 'pointer')
+    .on('mouseenter', function(event, d) {
+      if (!selectedNode) hoverRingNode(d.id, posMap);
+      showTooltip(d, event.clientX, event.clientY);
+    })
+    .on('mouseleave', function() {
+      if (!selectedNode) resetRingHighlight();
+      hideTooltip();
+    })
+    .on('click', function(event, d) {
+      event.stopPropagation();
+      selectNode(d.id);
+    });
+
+  // Animate ring by ring
+  [1, 2, 3, 4, 5].forEach((tier, idx) => {
+    ringNodeEls.filter(d => d.tier === tier)
+      .transition()
+      .delay(idx * 150)
+      .duration(600)
+      .attr('cx', d => d._rx)
+      .attr('cy', d => d._ry)
+      .attr('opacity', d => d.tier <= 3 ? 1 : d.tier === 4 ? 0.7 : 0.4);
+  });
+
+  // Labels for top nodes
+  ringLabels = g.append('g').selectAll('text')
+    .data(positioned.filter(n => n.metrics.total_comments > 200), d => d.id)
+    .join('text')
+    .text(d => d.name)
+    .attr('x', d => d._rx)
+    .attr('y', d => d._ry + nodeScale(d.metrics.total_comments) * 0.8 + 12)
+    .attr('text-anchor', 'middle')
+    .attr('font-size', 8)
+    .attr('fill', '#606070')
+    .attr('opacity', 0)
+    .attr('pointer-events', 'none')
+    .transition().delay(800).duration(400).attr('opacity', 0.7);
+
+  // Background click
+  svg.on('click', () => deselectNode());
+
+  // Zoom
+  svg.call(d3.zoom().scaleExtent([0.5, 4]).on('zoom', e => g.attr('transform', e.transform)));
+
+  // Bottom stats bar
+  const statsDiv = document.getElementById('ring-stats');
+  const tierColors = [TIER_COLORS[1], TIER_COLORS[2], TIER_COLORS[3], TIER_COLORS[4], TIER_COLORS[5]];
+  const tierLabels = ['operators', 'core', 'data-proven', 'strong match', 'suspected'];
+  statsDiv.innerHTML = [1,2,3,4,5].map((t, i) =>
+    `<span class="ring-seg"><span class="seg-dot" style="background:${tierColors[i]}"></span>${tiers[t].length} ${tierLabels[i]}</span>` +
+    (i < 4 ? '<span class="ring-seg"><span class="seg-arrow">&rarr;</span></span>' : '')
+  ).join('');
+}
+
+function hoverRingNode(nodeId, posMap) {
+  ringNodeEls.transition().duration(200)
+    .attr('opacity', d => {
+      const connected = ringEdgeEls.data().some(e =>
+        (e.a === nodeId && e.b === d.id) || (e.b === nodeId && e.a === d.id)
+      );
+      return d.id === nodeId || connected ? 1 : 0.05;
+    });
+  ringEdgeEls.transition().duration(300)
+    .attr('opacity', d => (d.a === nodeId || d.b === nodeId) ? 0.4 : 0.02);
+}
+
+function highlightRingNode(nodeId) {
+  if (!ringNodeEls) return;
+  ringNodeEls.transition().duration(300)
+    .attr('opacity', d => {
+      const connected = ringEdgeEls.data().some(e =>
+        (e.a === nodeId && e.b === d.id) || (e.b === nodeId && e.a === d.id)
+      );
+      return d.id === nodeId || connected ? 1 : 0.03;
+    });
+  ringEdgeEls.transition().duration(300)
+    .attr('opacity', d => (d.a === nodeId || d.b === nodeId) ? 0.6 : 0.01)
+    .attr('stroke', d => d.a === nodeId ? '#ef4444' : d.b === nodeId ? '#3b82f6' : '#606070');
+}
+
+function resetRingHighlight() {
+  if (!ringNodeEls) return;
+  ringNodeEls.transition().duration(300)
+    .attr('opacity', d => d.tier <= 3 ? 1 : d.tier === 4 ? 0.7 : 0.4);
+  ringEdgeEls.transition().duration(200)
+    .attr('opacity', 0.05)
+    .attr('stroke', '#606070');
+}
+
+// ========== VIEW 3: BURST TIMELINE ==========
+function renderBurstTimeline() {
+  const container = document.getElementById('view-burst');
+  const svg = d3.select('#burst-svg');
+  svg.selectAll('*').remove();
+
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  svg.attr('width', w).attr('height', h);
+
+  const margin = { top: 30, right: 320, bottom: 100, left: 160 };
+  const pw = w - margin.left - margin.right;
+  const ph = h - margin.top - margin.bottom;
+
+  const minCommenters = parseInt(document.getElementById('burst-min-slider').value) || 5;
+  const bursts = DATA.bursts.filter(b => b.commenter_count >= minCommenters);
+
+  // Get unique authors sorted by burst count
+  const authorCounts = {};
+  bursts.forEach(b => { authorCounts[b.post_author] = (authorCounts[b.post_author] || 0) + 1; });
+  const authors = Object.entries(authorCounts).sort((a, b) => b[1] - a[1]).map(d => d[0]);
+
+  // Date extent
+  const dates = bursts.map(b => new Date(b.date)).filter(d => !isNaN(d));
+  const dateExtent = d3.extent(dates);
+
+  const x = d3.scaleTime().domain(dateExtent).range([0, pw]);
+  const y = d3.scaleBand().domain(authors).range([0, ph]).padding(0.3);
+  const rScale = d3.scaleSqrt().domain([3, 24]).range([4, 18]);
+
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  // X axis
+  g.append('g')
+    .attr('transform', `translate(0,${ph})`)
+    .call(d3.axisBottom(x).ticks(8).tickFormat(d3.timeFormat('%b %d')))
+    .selectAll('text').attr('fill', '#606070').attr('font-size', 10);
+  g.selectAll('.domain, .tick line').attr('stroke', '#161622');
+
+  // Y axis (author names)
+  g.append('g')
+    .call(d3.axisLeft(y).tickFormat(id => {
+      const node = nodeMap[id];
+      return node ? node.name : id;
+    }))
+    .selectAll('text').attr('fill', '#606070').attr('font-size', 10);
+  g.selectAll('.domain, .tick line').attr('stroke', '#161622');
+
+  // Dots
+  const dots = g.selectAll('circle')
+    .data(bursts)
+    .join('circle')
+    .attr('cx', d => x(new Date(d.date)))
+    .attr('cy', d => y(d.post_author) + y.bandwidth() / 2)
+    .attr('r', 0)
+    .attr('fill', d => {
+      const node = nodeMap[d.post_author];
+      if (node && node.tier === 1) return '#ef4444';
+      if (node && node.cluster_id !== null) return TIER_COLORS[node.tier];
+      return '#3b82f6';
+    })
+    .attr('opacity', 0.6)
+    .attr('cursor', 'pointer')
+    .on('mouseenter', function(event, d) {
+      d3.select(this).attr('opacity', 1).attr('stroke', '#fff').attr('stroke-width', 1);
+      const tt = document.getElementById('tooltip');
+      tt.querySelector('.tt-name').textContent = d.post_author_name;
+      tt.querySelector('.tt-tier').textContent = `${d.commenter_count} commenters in ${d.window_minutes} min`;
+      tt.querySelector('.tt-stats').textContent = d.date;
+      tt.style.left = (event.clientX + 16) + 'px';
+      tt.style.top = (event.clientY - 10) + 'px';
+      tt.classList.add('visible');
+    })
+    .on('mouseleave', function() {
+      d3.select(this).attr('opacity', 0.6).attr('stroke', 'none');
+      hideTooltip();
+    })
+    .on('click', function(event, d) {
+      event.stopPropagation();
+      showBurstDetail(d);
+    });
+
+  dots.transition().delay((d, i) => i * 5).duration(400)
+    .attr('r', d => rScale(d.commenter_count));
+
+  // Zoom
+  svg.call(d3.zoom().scaleExtent([0.5, 4]).on('zoom', e => g.attr('transform', e.transform)));
+
+  // Right panel: top bursts
+  const panel = document.getElementById('burst-panel');
+  const top20 = bursts.slice(0, 20);
+  panel.innerHTML = '<div class="burst-panel-title">Largest Coordinated Events</div>' +
+    top20.map((b, i) => `<div class="burst-item" data-idx="${i}">
+      <span class="bi-count">${b.commenter_count}</span> accounts on <strong>${b.post_author_name}</strong>
+      <div class="bi-detail">${b.window_minutes} min window &middot; ${b.date}</div>
+    </div>`).join('');
+
+  panel.querySelectorAll('.burst-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.idx);
+      showBurstDetail(top20[idx]);
+    });
+  });
+
+  // Slider
+  document.getElementById('burst-min-slider').onchange = () => {
+    document.getElementById('burst-min-val').textContent = document.getElementById('burst-min-slider').value;
+    renderBurstTimeline();
+  };
+
+  // Summary
+  const avgSize = (bursts.reduce((s, b) => s + b.commenter_count, 0) / Math.max(bursts.length, 1)).toFixed(1);
+  const avgWindow = (bursts.reduce((s, b) => s + b.window_minutes, 0) / Math.max(bursts.length, 1)).toFixed(0);
+  document.getElementById('burst-summary').innerHTML =
+    `<strong style="color:#ef4444">${DATA.stats.total_burst_events.toLocaleString()}</strong> coordinated engagement events detected. ` +
+    `Average: <strong>${avgSize}</strong> commenters within <strong>${avgWindow}</strong> minutes of post publication.`;
+}
+
+function showBurstDetail(burst) {
+  // Show commenters in the detail panel
+  const panel = document.getElementById('detail-panel');
+  const content = document.getElementById('detail-content');
+  content.innerHTML = `
+    <div class="detail-name" style="color:#ef4444">Coordinated Event</div>
+    <div style="font-size:13px;margin-bottom:8px">${burst.post_author_name}'s post</div>
+    <div style="font-size:11px;color:#606070;margin-bottom:16px">${burst.commenter_count} accounts in ${burst.window_minutes} min &middot; ${burst.date}</div>
+    <div class="connections-title">Commenters in this event</div>
+    ${burst.commenters.map(c => {
+      const node = nodeMap[c.slug];
+      const color = node ? TIER_COLORS[node.tier] : '#606070';
+      return `<div class="connection-item" ${node ? `onclick="selectNode('${c.slug}')"` : ''}>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:6px"></span>${c.name}</span>
+        ${node ? `<span style="font-size:10px;color:${color}">${node.tier_label}</span>` : ''}
+      </div>`;
+    }).join('')}
+  `;
+  panel.classList.add('open');
+  selectedNode = '__burst__';
+}
+
+// ========== VIEW 4: AUTOMATED ACCOUNTS ==========
+function renderAutomatedView() {
+  const summary = document.getElementById('auto-summary');
+  summary.textContent = `${DATA.automated_accounts.length + DATA.nodes.filter(n => n.role === 'automated').length} accounts exhibit patterns consistent with automated or managed engagement behavior`;
+
+  const grid = document.getElementById('auto-grid');
+  grid.innerHTML = '';
+
+  // Featured: The Game Plan
+  const gp = DATA.company_page;
+  const gpCard = document.createElement('div');
+  gpCard.className = 'auto-card featured';
+  gpCard.innerHTML = `
+    <div class="ac-header">
+      <div class="ac-name" style="color:#ef4444">${gp.name}</div>
+      <div style="font-size:10px;color:#ef4444;font-family:'JetBrains Mono',monospace">COMPANY PAGE</div>
+    </div>
+    <div class="ac-metrics">
+      <div class="ac-metric"><div class="am-val">${gp.total_comments.toLocaleString()}</div><div class="am-lbl">Comments</div></div>
+      <div class="ac-metric"><div class="am-val">${gp.targets.length}</div><div class="am-lbl">Profiles Targeted</div></div>
+    </div>
+    <div class="ac-signals">
+      <span class="ac-signal sig-volume">HIGH VOLUME</span>
+      <span class="ac-signal sig-burst">BURST PATTERN</span>
+      <span class="ac-signal sig-cross">CROSS-NETWORK</span>
+    </div>
+    <div class="featured-targets" id="gp-targets-chart"></div>
+  `;
+  grid.appendChild(gpCard);
+
+  // Render mini target diagram
+  setTimeout(() => renderGamePlanMini(), 100);
+
+  // Other automated accounts
+  DATA.automated_accounts.filter(a => a.slug !== 'posts').forEach(acct => {
+    const card = document.createElement('div');
+    card.className = 'auto-card';
+    const scoreDots = Array(5).fill(0).map((_, i) => `<span class="score-dot ${i < acct.score ? 'filled' : ''}"></span>`).join('');
+    const sigMap = {
+      'HIGH VOLUME': 'sig-volume',
+      'HIGH GENERIC %': 'sig-generic',
+      'RAPID RESPONSE': 'sig-rapid',
+      'BURST PATTERN': 'sig-burst',
+      'CROSS-NETWORK': 'sig-cross'
+    };
+    card.innerHTML = `
+      <div class="ac-header">
+        <div class="ac-name">${acct.name}</div>
+        <div class="ac-score">${scoreDots}</div>
+      </div>
+      <a class="ac-link" href="${acct.linkedin_url}" target="_blank" rel="noopener">${acct.linkedin_url}</a>
+      <div class="ac-metrics">
+        <div class="ac-metric"><div class="am-val">${acct.total_comments}</div><div class="am-lbl">Comments</div></div>
+        <div class="ac-metric"><div class="am-val">${acct.unique_authors}</div><div class="am-lbl">Authors</div></div>
+        <div class="ac-metric"><div class="am-val">${acct.burst_appearances}</div><div class="am-lbl">Bursts</div></div>
+      </div>
+      <div class="ac-signals">
+        ${(acct.signals || []).map(s => `<span class="ac-signal ${sigMap[s] || 'sig-burst'}">${s}</span>`).join('')}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renderGamePlanMini() {
+  const container = document.getElementById('gp-targets-chart');
+  if (!container) return;
+  const w = container.clientWidth || 400;
+  const h = 200;
+
+  const svg = d3.select(container).append('svg').attr('width', w).attr('height', h);
+  const targets = DATA.company_page.targets.slice(0, 30);
+  const rScale = d3.scaleSqrt().domain([1, d3.max(targets, d => d.comments)]).range([3, 14]);
+
+  // Simple force layout for mini diagram
+  const sim = d3.forceSimulation(targets.map(t => ({...t})))
+    .force('center', d3.forceCenter(w / 2, h / 2))
+    .force('charge', d3.forceManyBody().strength(-15))
+    .force('collision', d3.forceCollide(d => rScale(d.comments) + 2))
+    .stop();
+
+  for (let i = 0; i < 100; i++) sim.tick();
+
+  const nodes = sim.nodes();
+  svg.selectAll('circle')
+    .data(nodes)
+    .join('circle')
+    .attr('cx', d => d.x)
+    .attr('cy', d => d.y)
+    .attr('r', d => rScale(d.comments))
+    .attr('fill', d => {
+      const node = nodeMap[d.slug];
+      return node ? TIER_COLORS[node.tier] : '#606070';
+    })
+    .attr('opacity', 0.7)
+    .append('title')
+    .text(d => `${d.name}: ${d.comments} comments`);
+}
+
+// ========== VIEW 5: EVIDENCE ==========
+function renderEvidenceView() {
+  const container = document.getElementById('evidence-view');
+  if (container.querySelector('.evidence-content')) return; // already rendered
+
+  const stats = DATA.stats;
+  const recipHigh = DATA.reciprocal_pairs.filter(p => p.a_to_b >= 10 && p.b_to_a >= 10).length;
+
+  container.innerHTML = `<div class="evidence-content">
+    <div class="ev-section">
+      <h2>418 LinkedIn accounts. One coordinated network.</h2>
+      <p>This analysis documents a network of LinkedIn accounts engaging with each other at rates that are statistically impossible through organic behavior. The accounts span multiple industries and geographies, yet maintain engagement patterns that are remarkably uniform in timing, frequency, and reciprocity.</p>
+      <div class="ev-inline-stats">
+        <div class="ev-inline-stat"><div class="eis-val">${stats.total_accounts}</div><div class="eis-lbl">Tier 1-5 Accounts</div></div>
+        <div class="ev-inline-stat"><div class="eis-val">${stats.total_comments_analyzed.toLocaleString()}</div><div class="eis-lbl">Comments Analyzed</div></div>
+        <div class="ev-inline-stat"><div class="eis-val">30 days</div><div class="eis-lbl">Observation Window</div></div>
+      </div>
+    </div>
+
+    <div class="ev-section">
+      <h2>${recipHigh} account pairs commenting on each other 10+ times each direction</h2>
+      <p>On LinkedIn, sustained reciprocal commenting at this level between accounts with moderate follower counts is exceptionally rare. This network has ${recipHigh} such pairs. The probability of this occurring organically is effectively zero.</p>
+      <p>The total reciprocal pair count (at 5+ threshold) is ${stats.total_reciprocal_pairs}. The average reciprocal weight is ${stats.avg_reciprocal_weight} comments per direction, with the highest pairs exchanging nearly 30 comments each way within a single month.</p>
+      <div class="ev-chart" id="ev-recip-chart"></div>
+    </div>
+
+    <div class="ev-section">
+      <h2>1,453 coordinated engagement events</h2>
+      <p>Multiple accounts from the network repeatedly comment on the same post within a narrow time window. The largest observed event: 24 network accounts commenting on a single post within 50 minutes.</p>
+      <p>These are not coincidental. The same accounts appear in burst after burst. The consistency of participation across hundreds of events points to systematic coordination rather than organic community engagement.</p>
+      <div class="ev-chart" id="ev-burst-chart"></div>
+    </div>
+
+    <div class="ev-section">
+      <h2>4 interconnected sub-networks. 81.6% of accounts bridge multiple groups.</h2>
+      <p>Community detection identifies 4 distinct groups within the network, but they are not independent. 81.6% of accounts maintain engagement relationships across multiple groups, indicating centralized coordination rather than organic community formation.</p>
+      <p>In natural LinkedIn communities, clusters form around shared industries or interests and rarely maintain cross-cluster engagement above background levels. This network's cross-cluster density is an order of magnitude higher than organic benchmarks.</p>
+    </div>
+
+    <div class="ev-section">
+      <h2>78 accounts show signs of managed or automated engagement</h2>
+      <p>These accounts exhibit one or more of: high-volume generic commenting across many profiles, rapid coordinated response patterns, appearance in dozens of burst events, or systematic engagement across the full network.</p>
+      <p>One company page left ${DATA.company_page.total_comments.toLocaleString()} comments on ${DATA.company_page.targets.length} different profiles in the network. The comments follow templates and are distributed across accounts at all tiers of the network.</p>
+    </div>
+
+    <div class="ev-section">
+      <h2>30x the organic engagement density</h2>
+      <p>The reciprocal engagement density of this network is approximately 30 times higher than what occurs in organic LinkedIn communities of similar size. In a random sample of LinkedIn accounts in the same industries, the expected number of reciprocal pairs at this threshold would be near zero.</p>
+      <p>The combination of high reciprocity, coordinated timing, generic comment patterns, and cross-cluster uniformity creates a statistical signature that distinguishes this network from any known organic engagement pattern.</p>
+    </div>
+
+    <div class="ev-section ev-methodology">
+      <h2>How this analysis was conducted</h2>
+      <ul>
+        <li>All data was collected from publicly accessible LinkedIn profiles</li>
+        <li>Comments, posts, and engagement metrics are public information</li>
+        <li>Network analysis used standard community detection algorithms (Louvain method)</li>
+        <li>Reciprocal pairs defined as two accounts commenting on each other 5+ times within the observation window</li>
+        <li>Burst events defined as 3+ network accounts commenting on the same post within 60 minutes</li>
+        <li>Statistical comparisons based on published research on organic LinkedIn engagement patterns</li>
+        <li>No private data, no hacking, no unauthorized access</li>
+      </ul>
+    </div>
+
+    <div class="ev-footer">
+      This analysis examines public engagement patterns on LinkedIn. Individuals identified may have explanations for their engagement behavior. The data presented here documents statistical patterns, not intent.
+    </div>
+  </div>`;
+
+  // Render evidence charts
+  setTimeout(() => {
+    renderRecipChart();
+    renderBurstSizeChart();
+  }, 100);
+}
+
+function renderRecipChart() {
+  const container = document.getElementById('ev-recip-chart');
+  if (!container) return;
+  const w = container.clientWidth;
+  const h = 120;
+
+  const svg = d3.select(container).append('svg').attr('width', w).attr('height', h);
+  const g = svg.append('g').attr('transform', 'translate(40,10)');
+  const pw = w - 60;
+  const ph = h - 30;
+
+  // Histogram of reciprocal pair totals
+  const totals = DATA.reciprocal_pairs.map(p => p.total);
+  const bins = d3.bin().domain([0, 60]).thresholds(20)(totals);
+
+  const x = d3.scaleLinear().domain([0, 60]).range([0, pw]);
+  const y = d3.scaleLinear().domain([0, d3.max(bins, b => b.length)]).range([ph, 0]);
+
+  g.selectAll('rect')
+    .data(bins)
+    .join('rect')
+    .attr('x', d => x(d.x0) + 1)
+    .attr('y', d => y(d.length))
+    .attr('width', d => Math.max(0, x(d.x1) - x(d.x0) - 2))
+    .attr('height', d => ph - y(d.length))
+    .attr('fill', '#3b82f6')
+    .attr('opacity', 0.6);
+
+  g.append('g').attr('transform', `translate(0,${ph})`)
+    .call(d3.axisBottom(x).ticks(6).tickFormat(d => d))
+    .selectAll('text').attr('fill', '#606070').attr('font-size', 9);
+  g.selectAll('.domain, .tick line').attr('stroke', '#161622');
+
+  g.append('text').attr('x', pw / 2).attr('y', ph + 22).attr('text-anchor', 'middle')
+    .attr('font-size', 9).attr('fill', '#353540').text('Total reciprocal comments per pair');
+}
+
+function renderBurstSizeChart() {
+  const container = document.getElementById('ev-burst-chart');
+  if (!container) return;
+  const w = container.clientWidth;
+  const h = 120;
+
+  const svg = d3.select(container).append('svg').attr('width', w).attr('height', h);
+  const g = svg.append('g').attr('transform', 'translate(40,10)');
+  const pw = w - 60;
+  const ph = h - 30;
+
+  const sizes = DATA.bursts.map(b => b.commenter_count);
+  const bins = d3.bin().domain([3, 25]).thresholds(11)(sizes);
+
+  const x = d3.scaleLinear().domain([3, 25]).range([0, pw]);
+  const y = d3.scaleLinear().domain([0, d3.max(bins, b => b.length)]).range([ph, 0]);
+
+  g.selectAll('rect')
+    .data(bins)
+    .join('rect')
+    .attr('x', d => x(d.x0) + 1)
+    .attr('y', d => y(d.length))
+    .attr('width', d => Math.max(0, x(d.x1) - x(d.x0) - 2))
+    .attr('height', d => ph - y(d.length))
+    .attr('fill', '#ef4444')
+    .attr('opacity', 0.6);
+
+  g.append('g').attr('transform', `translate(0,${ph})`)
+    .call(d3.axisBottom(x).ticks(8).tickFormat(d => d))
+    .selectAll('text').attr('fill', '#606070').attr('font-size', 9);
+  g.selectAll('.domain, .tick line').attr('stroke', '#161622');
+
+  g.append('text').attr('x', pw / 2).attr('y', ph + 22).attr('text-anchor', 'middle')
+    .attr('font-size', 9).attr('fill', '#353540').text('Network accounts per burst event');
+}
+
+// ========== INIT ==========
+init();
+</script>
+</body>
+</html>

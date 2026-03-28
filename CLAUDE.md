@@ -72,6 +72,7 @@ Every claim in any published deliverable must be provable from:
 - scripts/identify_vas.py — Multi-signal VA identification (generic%, response time, bursts, operator overlap)
 - scripts/operator_footprint.py — Cory/Charlie outgoing/incoming comment mapping and shared targets
 - scripts/ring_tiers.py — Evidence-based tier assignment (1-6) and mass registry update (--register flag)
+- scripts/build_public_viz_data.py — Builds public visualization data.json from analysis files (anonymized names, no private evidence)
 
 ## Analysis Outputs
 
@@ -120,6 +121,16 @@ Every claim in any published deliverable must be provable from:
 - Tier 5: Suspected (34) - not registered
 - Tier 6: Lead (258) - not registered
 - Total registered: 161 profiles (P001-P185)
+
+## Public Visualization
+
+- output/visualization/index.html — Single-file 5-view interactive platform (D3.js)
+- output/visualization/data.json — 160 Tier 1-5 nodes, 1,542 edges, anonymized names
+- Views: Network Map, Ring Structure, Burst Timeline, Automated Accounts, Evidence
+- Names displayed as "First L." format (e.g., "Cory B.")
+- NO private evidence references (WhatsApp, call recording, emails, VAs, company names)
+- All claims provable from public LinkedIn data alone
+- Rebuild data.json: python3 scripts/build_public_viz_data.py
 
 ## Rules
 
