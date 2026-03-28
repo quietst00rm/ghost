@@ -1,0 +1,5 @@
+cluster_id,member_count,internal_pairs,external_pairs,avg_weight,contains_whatsapp_members,hub_account,hub_name
+0,11,30,96,43.2,yes,barryflanagan,Barry Flanagan
+1,7,9,1,24.3,yes,coryblumenfeld,Cory Blumenfeld
+2,18,93,124,34.2,yes,lingabson,Ling Abson
+3,13,46,113,42.3,yes,maryam-jan-akbari,Maryam Jan Akbari

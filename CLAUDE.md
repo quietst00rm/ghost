@@ -58,7 +58,22 @@ Every claim in any published deliverable must be provable from:
 - scripts/parse_whatsapp.py — Parses raw WhatsApp export into structured CSVs
 - scripts/registry_manager.py — CLI tool: add-profile, add-evidence, add-network, search, summary
 - scripts/scrape_linkedin.py — Apify scraping pipeline with dry-run, resume, batch support
+- scripts/scrape_expansion.py — Scrapes second-ring expansion targets via Apify
 - scripts/build_engagement_matrix.py — Builds commenter-author matrix from scraped comments
+- scripts/build_reciprocal_pairs.py — Identifies reciprocal engagement pairs (both directions >= 3)
+- scripts/detect_clusters.py — Louvain community detection, bridge accounts, third-ring candidates
+
+## Analysis Outputs
+
+- data/analysis/engagement-matrix.csv — 72x72 commenter-vs-author matrix
+- data/analysis/top-pairs.csv — All 1,232 directed pairs sorted by count
+- data/analysis/reciprocal-pairs.csv — 345 reciprocal pairs (both directions >= 3)
+- data/analysis/external-commenters.csv — 8,198 non-registry commenters on registry posts
+- data/analysis/clusters.csv — Per-member cluster assignments (4 clusters, 49 nodes)
+- data/analysis/cluster-summary.csv — Per-cluster stats (density, hub, WhatsApp overlap)
+- data/analysis/bridge-accounts.csv — 40 accounts connecting 2+ clusters
+- data/analysis/third-ring-candidates.csv — 69 accounts for next scrape wave
+- data/analysis/statistical-summary.md — Full statistical report with organic comparisons
 
 ## Rules
 
