@@ -67,6 +67,11 @@ Every claim in any published deliverable must be provable from:
 - scripts/comment_text_analysis.py — Generic phrase detection and VA behavior flagging
 - scripts/full_network_map.py — Expanded network graph with cluster detection (5+ author threshold)
 - scripts/master_target_list.py — Prioritized scrape target list combining all analysis signals
+- scripts/game_plan_network.py — Maps The Game Plan's 68 targets and co-commenters
+- scripts/deep_profile_analysis.py — Deep commenter analysis for Victor Trieu, Charlie Hills, Chris Lang
+- scripts/identify_vas.py — Multi-signal VA identification (generic%, response time, bursts, operator overlap)
+- scripts/operator_footprint.py — Cory/Charlie outgoing/incoming comment mapping and shared targets
+- scripts/ring_tiers.py — Evidence-based tier assignment (1-6) and mass registry update (--register flag)
 
 ## Analysis Outputs
 
@@ -89,12 +94,32 @@ Every claim in any published deliverable must be provable from:
 - data/analysis/full-network-pairs.csv — 4,387 directed engagement pairs (5+ author threshold)
 - data/analysis/full-network-clusters.csv — 386 accounts in expanded network (311 new)
 - data/analysis/master-ring-members.csv — 376 prioritized targets (17 critical, 70 high)
+- data/analysis/game-plan-targets.csv — 68 profiles targeted by The Game Plan bot account
+- data/analysis/game-plan-co-commenters.csv — Co-commenters shadowing The Game Plan across targets
+- data/analysis/victor-trieu-commenters.csv — 617 commenters on Victor Trieu's posts
+- data/analysis/charlie-hills-commenters.csv — 1,453 commenters on Charlie Hills' posts
+- data/analysis/chris-lang-commenters.csv — 724 commenters on Chris Lang's posts
+- data/analysis/va-identification.csv — 78 accounts flagged with VA behavioral signals (score 1-5)
+- data/analysis/operator-footprint.csv — Cory/Charlie incoming/outgoing engagement map
+- data/analysis/operator-shared-targets.csv — Profiles both operators engage with
+- data/analysis/ring-tiers.csv — 418 accounts with evidence-based tier assignments (1-6)
 
 ## Networks
 
 - **growth-community** — Original WhatsApp pod (P001-P068)
 - **growth-community-extended** — Second ring discovered via reciprocal pairs (P069-P092)
 - **barker-network** — Shane Barker's high-frequency commenters (P093-P126), 9 probable + 25 leads
+- **extended-network** / **cluster-N** — Tier 3-4 accounts discovered via data analysis (P128-P185)
+
+## Ring Tiers
+
+- Tier 1: Confirmed Operator (2) - direct evidence
+- Tier 2: Confirmed Participant (53) - WhatsApp/VA-client proven
+- Tier 3: Proven by Data (68) - reciprocal 5+ confirmed, 10+ bursts, or VA score 3+
+- Tier 4: Strong Indicator (3) - 20+ ring targets, reciprocal 3-4 confirmed
+- Tier 5: Suspected (34) - not registered
+- Tier 6: Lead (258) - not registered
+- Total registered: 161 profiles (P001-P185)
 
 ## Rules
 
