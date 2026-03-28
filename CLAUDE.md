@@ -62,6 +62,11 @@ Every claim in any published deliverable must be provable from:
 - scripts/build_engagement_matrix.py — Builds commenter-author matrix from scraped comments
 - scripts/build_reciprocal_pairs.py — Identifies reciprocal engagement pairs (both directions >= 3)
 - scripts/detect_clusters.py — Louvain community detection, bridge accounts, third-ring candidates
+- scripts/full_commenter_census.py — Full census of all 9,731 commenters across 60K+ comments
+- scripts/timing_analysis.py — Response time and burst pattern detection for coordinated commenting
+- scripts/comment_text_analysis.py — Generic phrase detection and VA behavior flagging
+- scripts/full_network_map.py — Expanded network graph with cluster detection (5+ author threshold)
+- scripts/master_target_list.py — Prioritized scrape target list combining all analysis signals
 
 ## Analysis Outputs
 
@@ -77,6 +82,13 @@ Every claim in any published deliverable must be provable from:
 - data/analysis/shane-top-commenters.csv — 165 commenters on Shane Barker's 30 scraped posts
 - data/analysis/shane-scrape-queue.csv — 35 unsscraped Shane commenters (5+ comments) for next wave
 - data/parsed/shane-barker-posts.csv — 525 Shane Barker posts (Apr 2025 - Mar 2026), 22,418 total comments
+- data/analysis/full-commenter-census.csv — 9,731 unique commenters, 145 hitting 10+ authors (91 unregistered)
+- data/analysis/comment-timing.csv — Response time stats for 145 high-frequency commenters
+- data/analysis/burst-events.csv — 1,453 burst events (3+ ring commenters within 60min)
+- data/analysis/comment-quality.csv — Text quality scores for 835 commenters, 39 suspected VA accounts
+- data/analysis/full-network-pairs.csv — 4,387 directed engagement pairs (5+ author threshold)
+- data/analysis/full-network-clusters.csv — 386 accounts in expanded network (311 new)
+- data/analysis/master-ring-members.csv — 376 prioritized targets (17 critical, 70 high)
 
 ## Networks
 
