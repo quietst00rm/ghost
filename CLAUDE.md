@@ -74,6 +74,15 @@ Every claim in any published deliverable must be provable from:
 - data/analysis/bridge-accounts.csv — 40 accounts connecting 2+ clusters
 - data/analysis/third-ring-candidates.csv — 69 accounts for next scrape wave
 - data/analysis/statistical-summary.md — Full statistical report with organic comparisons
+- data/analysis/shane-top-commenters.csv — 165 commenters on Shane Barker's 30 scraped posts
+- data/analysis/shane-scrape-queue.csv — 35 unsscraped Shane commenters (5+ comments) for next wave
+- data/parsed/shane-barker-posts.csv — 525 Shane Barker posts (Apr 2025 - Mar 2026), 22,418 total comments
+
+## Networks
+
+- **growth-community** — Original WhatsApp pod (P001-P068)
+- **growth-community-extended** — Second ring discovered via reciprocal pairs (P069-P092)
+- **barker-network** — Shane Barker's high-frequency commenters (P093-P126), 9 probable + 25 leads
 
 ## Rules
 
