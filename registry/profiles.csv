@@ -1,0 +1,60 @@
+profile_id,linkedin_url,display_name,whatsapp_name,role,confidence,network,client_of,notes,date_added
+P001,https://www.linkedin.com/in/coryblumenfeld,Cory Blumenfeld,Cory Blumenfeld,operator,confirmed,linked-agency,,Co-founder Linked Agency. Owns BlueMoso. Runs Growth Community pod. Confirmed on call.,2026-03-27
+P002,https://www.linkedin.com/in/charlie-hills,Charlie Hills,,operator,confirmed,linked-agency,,Co-founder Linked Agency. CC'd on post-call email.,2026-03-27
+P003,https://www.linkedin.com/in/shanebarker,Shane Barker,,client,confirmed,linked-agency,,Cory confirmed on call: provides VAs to Shane. Team runs his Twitter and LinkedIn.,2026-03-27
+P004,https://www.linkedin.com/in/chasedimond,Chase Diamond,,unknown,lead,unknown,,Suspected network connection. No data yet.,2026-03-27
+P005,https://www.linkedin.com/in/joe-m-c,Joe Nilsen,,non-participant,confirmed,none,,Content posted in pod without knowledge or consent. Never engaged.,2026-03-27
+P006,,Abigail Enriquez,Abigail Enriquez,va,confirmed,growth-community,Frank|Steven,"VA posting for Frank, Steven in Growth Community.",2026-03-27
+P007,,Engagement Team Gex,Engagement Team Gex,va,confirmed,growth-community,Chris Murphy|Tiffany Masson,"VA posting for Chris Murphy, Tiffany Masson in Growth Community.",2026-03-27
+P008,,Jovan,Jovan,va,confirmed,growth-community,Dr. Adeel Khan|Sandy,"VA posting for Dr. Adeel Khan, Sandy in Growth Community.",2026-03-27
+P009,,Lance,Lance,va,confirmed,growth-community,Ben|Karen|Louis|Paul|Terry,"VA posting for Ben, Karen, Louis, Paul, Terry in Growth Community.",2026-03-27
+P010,,Mary Cabungan,Mary Cabungan,va,confirmed,growth-community,Joe|John|Lucy|Shreya,"VA posting for Joe, John, Lucy, Shreya in Growth Community.",2026-03-27
+P011,,May Alfonso,May Alfonso,va,confirmed,growth-community,Ray,VA posting for Ray in Growth Community.,2026-03-27
+P012,,Rochelle,Rochelle,va,confirmed,growth-community,Leo,VA posting for Leo in Growth Community.,2026-03-27
+P013,,Ryza,Ryza,va,confirmed,growth-community,Cory,VA posting for Cory in Growth Community.,2026-03-27
+P014,,Shayne,Shayne,va,confirmed,growth-community,Cha Romero,VA posting for Cha Romero in Growth Community.,2026-03-27
+P015,,charles,charles,va,confirmed,growth-community,Kelly,VA posting for Kelly in Growth Community.,2026-03-27
+P016,,eloisepantastico,eloisepantastico,va,confirmed,growth-community,Michael|Nick,"VA posting for Michael, Nick in Growth Community.",2026-03-27
+P017,,nini,nini,va,confirmed,growth-community,Alan|Emily Parcell,"VA posting for Alan, Emily Parcell in Growth Community.",2026-03-27
+P018,,‪+63 945 332 4021‬,‪+63 945 332 4021‬,va,confirmed,growth-community,Nick,VA posting for Nick in Growth Community.,2026-03-27
+P019,,‪+63 961 752 0502‬,‪+63 961 752 0502‬,va,confirmed,growth-community,Michael,VA posting for Michael in Growth Community.,2026-03-27
+P020,https://www.linkedin.com/in/alannee,Alan Nee,Alan Nee,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P021,https://www.linkedin.com/in/bridgett-strickler,Bridgett Strickler,Bridgett Strickler,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P022,https://www.linkedin.com/in/chrismurphyhq,Chris Murphy,Chris Murphy,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P023,https://www.linkedin.com/in/gabriella-cacciatore-b3912224,Gabriella Cacciatore,Gabriella Cacciatore,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P024,https://www.linkedin.com/in/jerryvalerio,Jerry Valerio,Jerry Valerio,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P025,https://www.linkedin.com/in/kristaps-kazaks,Kristaps Kazaks,Kristaps Kazaks,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P026,https://www.linkedin.com/in/mahaalaoui,Maha,Maha,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P027,https://www.linkedin.com/in/mennosiebinga,Menno Siebinga,Menno Siebinga,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P028,https://www.linkedin.com/in/mohammed-kasujee,Mohammed Kasujee,Mohammed Kasujee,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P029,https://www.linkedin.com/in/patrickcattin,Patrick Cattin,Patrick Cattin,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P030,https://www.linkedin.com/in/paula-beattie-7a89795,Paula,Paula,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P031,https://www.linkedin.com/in/renemadden,Rene Madden,Rene Madden,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P032,https://www.linkedin.com/in/seshannissanka,Seshan Nissanka,Seshan Nissanka,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P033,https://www.linkedin.com/in/tiffanymasson,Tiffany Masson,Tiffany Masson,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P034,https://www.linkedin.com/in/yauhanmehta,Yauhan,Yauhan,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P035,https://www.linkedin.com/in/mitapatel1,‪+44 7973 367026‬,‪+44 7973 367026‬,member,confirmed,growth-community,,Self-posting member in Growth Community.,2026-03-27
+P036,https://www.linkedin.com/in/benpadnos,Ben,,client,confirmed,growth-community,,Content posted by VA(s): Lance.,2026-03-27
+P037,https://www.linkedin.com/in/charomero,Cha Romero,,client,confirmed,growth-community,,Content posted by VA(s): Shayne.,2026-03-27
+P038,https://www.linkedin.com/in/dradeelkhan-md,Dr. Adeel Khan,,client,confirmed,growth-community,,Content posted by VA(s): Jovan.,2026-03-27
+P039,https://www.linkedin.com/in/emilyparcell,Emily Parcell,,client,confirmed,growth-community,,Content posted by VA(s): nini.,2026-03-27
+P040,https://www.linkedin.com/in/frank-ienzi,Frank,,client,confirmed,growth-community,,Content posted by VA(s): Abigail Enriquez.,2026-03-27
+P041,https://www.linkedin.com/in/john-brewton-the-helper-strategy,John,,client,confirmed,growth-community,,Content posted by VA(s): Mary Cabungan.,2026-03-27
+P042,https://www.linkedin.com/in/karenstephen-ca,Karen,,client,confirmed,growth-community,,Content posted by VA(s): Lance.,2026-03-27
+P043,https://www.linkedin.com/in/kellyamcginnis,Kelly,,client,confirmed,growth-community,,Content posted by VA(s): charles.,2026-03-27
+P044,https://www.linkedin.com/in/leonardrodman,Leo,,client,confirmed,growth-community,,Content posted by VA(s): Rochelle.,2026-03-27
+P045,https://www.linkedin.com/in/louisshulman,Louis,,client,confirmed,growth-community,,Content posted by VA(s): Lance.,2026-03-27
+P046,https://www.linkedin.com/in/lucyalligan,Lucy,,client,confirmed,growth-community,,Content posted by VA(s): Mary Cabungan.,2026-03-27
+P047,https://www.linkedin.com/in/michaeltatham,Michael,,client,confirmed,growth-community,,"Content posted by VA(s): eloisepantastico, ‪+63 961 752 0502‬.",2026-03-27
+P048,https://www.linkedin.com/in/realnickbradley,Nick,,client,confirmed,growth-community,,"Content posted by VA(s): eloisepantastico, ‪+63 945 332 4021‬.",2026-03-27
+P049,https://www.linkedin.com/in/rayjbjang,Ray,,client,confirmed,growth-community,,Content posted by VA(s): May Alfonso.,2026-03-27
+P050,https://www.linkedin.com/in/sandygrigsby,Sandy,,client,confirmed,growth-community,,Content posted by VA(s): Jovan.,2026-03-27
+P051,https://www.linkedin.com/in/shreyavohora,Shreya,,client,confirmed,growth-community,,Content posted by VA(s): Mary Cabungan.,2026-03-27
+P052,https://www.linkedin.com/in/stevenpettigrewinvestor,Steven,,client,confirmed,growth-community,,Content posted by VA(s): Abigail Enriquez.,2026-03-27
+P053,https://www.linkedin.com/in/terry-zelen,Terry,,client,confirmed,growth-community,,Content posted by VA(s): Lance.,2026-03-27
+P054,,Hazel Jarque,Hazel Jarque,member,confirmed,growth-community,,Active member in Growth Community.,2026-03-27
+P055,,Konstanty,Konstanty,member,confirmed,growth-community,,Active member in Growth Community.,2026-03-27
+P056,,Leslie,Leslie,member,confirmed,growth-community,,Active member in Growth Community.,2026-03-27
+P057,,‪+39 345 683 8136‬,‪+39 345 683 8136‬,member,confirmed,growth-community,,Active member in Growth Community.,2026-03-27
+P058,,‪+65 8853 6265‬,‪+65 8853 6265‬,member,confirmed,growth-community,,Active member in Growth Community.,2026-03-27
+P059,,‪+91 80763 52399‬,‪+91 80763 52399‬,member,confirmed,growth-community,,Active member in Growth Community.,2026-03-27

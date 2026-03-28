@@ -1,0 +1,8 @@
+profile_id,evidence_type,evidence_source,timestamp,description
+P001,verbal_admission,call-transcript.json,21:57,Cory confirms Growth Community is his group
+P001,verbal_admission,call-transcript.json,22:12,Cory states he runs multiple pods
+P001,verbal_admission,call-transcript.json,22:46,Cory describes VA pod engagement as paid service
+P001,verbal_admission,call-transcript.json,23:20,Cory names GoLogin anti-detect browser
+P001,verbal_admission,call-transcript.json,27:00,Cory confirms BlueMoso is his company
+P003,verbal_admission,call-transcript.json,02:28,Cory says he provides Shane with VAs
+P003,verbal_admission,call-transcript.json,03:11,Cory says team runs Shane's Twitter and LinkedIn

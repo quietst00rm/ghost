@@ -1,0 +1,8 @@
+.env
+data/raw/
+data/scraped/
+*.mp3
+__pycache__/
+*.pyc
+.DS_Store
+._*
